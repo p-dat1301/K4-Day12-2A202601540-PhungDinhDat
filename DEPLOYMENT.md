@@ -83,6 +83,25 @@ POST /chat không có Authorization    401
 POST /chat có Bearer token hợp lệ    200
 ```
 
+## CI/CD — GitHub Actions
+
+Workflow: `.github/workflows/ci.yml`, chạy khi `push` (main, develop, `feature/**`) và khi `pull_request`.
+
+| Job | Nội dung | Điều kiện |
+|-----|----------|-----------|
+| `test` | Cài `requirements.txt`, chạy pytest bỏ `test_cp5.py` và `test_bonus_cicd.py` | Mọi lần push/PR |
+| `build` | `docker build` rồi chạy thử container, gọi `/healthz` | `needs: [test]` |
+| `deploy` | `curl -X POST` vào Render Deploy Hook, smoke test `/healthz` sau 45 giây | `needs: [test, build]` và chỉ khi push vào `main` |
+
+Cấu hình cần đặt trên GitHub (repo → Settings → Secrets and variables → Actions):
+
+| Tên | Loại | Nội dung |
+|-----|------|----------|
+| `RENDER_DEPLOY_HOOK_URL` | Secret | Deploy Hook URL lấy ở Render → Service → Settings |
+| `PUBLIC_URL` | Variable | Domain HTTPS của service, dùng cho bước smoke test |
+
+Workflow không chứa giá trị bí mật nào; test job dùng `API_TOKEN=ci-dummy` và `REDIS_URL=fake://` để thoả cấu hình 12-Factor trên máy CI sạch.
+
 ## Bằng Chứng Local Trước Deploy
 
 Docker Compose đã xác minh cùng image và API contract trước khi chuyển sang Render:
