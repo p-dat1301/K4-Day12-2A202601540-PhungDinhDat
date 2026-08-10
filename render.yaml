@@ -31,4 +31,3 @@ services:
     name: day12-chat-redis
     plan: free
     ipAllowList: []
-    persistenceMode: off
