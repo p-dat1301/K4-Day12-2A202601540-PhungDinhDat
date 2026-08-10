@@ -68,7 +68,12 @@ jobs:
       - name: Trigger Render deploy hook
         env:
           DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: curl -fsS -X POST "$DEPLOY_HOOK_URL"
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ]; then
+            echo "Chưa cấu hình secret RENDER_DEPLOY_HOOK_URL — bỏ qua bước deploy."
+            exit 0
+          fi
+          curl -fsS -X POST "$DEPLOY_HOOK_URL"
 
       - name: Smoke test deployment
         if: vars.PUBLIC_URL != ''
